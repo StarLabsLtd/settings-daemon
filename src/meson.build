@@ -10,12 +10,16 @@ sources = files(
     'Backends/NightLightSettings.vala',
     'Backends/PowerProfilesSync.vala',
     'Backends/PrefersColorSchemeSettings.vala',
+    'Backends/SystemDSystemUpdate.vala',
     'Backends/SystemUpdate.vala',
     'DBus/DesktopIntegration.vala',
     'DBus/ShellKeyGrabber.vala',
     'Utils/PkUtils.vala',
     'Utils/SessionUtils.vala',
     'Utils/SunriseSunsetCalculator.vala',
+    'Utils/SysupdateHostTarget.vala',
+    'Utils/SysupdateJob.vala',
+    'Utils/SysupdateJobManager.vala',
 )
 
 args = []
