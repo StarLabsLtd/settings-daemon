@@ -138,7 +138,9 @@ public class SettingsDaemon.Settings : GLib.Object {
     private const string[] SUPPORTED_SCHEMAS = {
         "io.elementary.settings-daemon.a11y",
         "io.elementary.settings-daemon.datetime",
-        "org.freedesktop.appearance"
+        "org.freedesktop.appearance",
+        "org.gnome.desktop.interface",
+        "org.gnome.desktop.wm.preferences"
     };
 
     construct {
