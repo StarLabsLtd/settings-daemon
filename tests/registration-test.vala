@@ -46,12 +46,7 @@ public int main (string[] args) {
         critical (e.message);
         assert_not_reached ();
     }
-    try {
-        Bus.get_sync (BusType.SESSION).close_sync ();
-    } catch (Error e) {
-        assert_not_reached ();
-    }
-    bus.down ();
+    bus.stop ();
     FileUtils.remove (command_line);
     return 0;
 }
