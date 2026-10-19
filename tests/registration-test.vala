@@ -15,10 +15,11 @@ public int main (string[] args) {
     bus.up ();
     var application = new SettingsDaemon.Application ();
     try {
-        assert (application.register (null));
-        var connection = application.get_dbus_connection ();
+        var connection = Bus.get_sync (BusType.SESSION);
+        var object_path = "/io/elementary/settings_daemon/Test";
+        assert (application.register_backends (connection, object_path));
         var reply = connection.call_sync (
-            connection.get_unique_name (), application.get_dbus_object_path (),
+            connection.get_unique_name (), object_path,
             "org.freedesktop.DBus.Introspectable", "Introspect", null,
             new VariantType ("(s)"), DBusCallFlags.NONE, -1
         );
@@ -33,7 +34,6 @@ public int main (string[] args) {
         critical (e.message);
         assert_not_reached ();
     }
-    application.quit ();
     bus.down ();
     FileUtils.remove (command_line);
     return 0;

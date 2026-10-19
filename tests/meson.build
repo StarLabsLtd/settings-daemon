@@ -21,7 +21,6 @@ custom_target(
 test_environment = environment()
 test_environment.set('GSETTINGS_BACKEND', 'memory')
 test_environment.set('GSETTINGS_SCHEMA_DIR', test_schema_dir)
-test_environment.set('GDK_BACKEND', 'x11')
 
 echo_records_test = executable(
     'echo-records-test',
@@ -44,8 +43,7 @@ registration_test = executable(
         '--vapidir=' + meson.project_build_root(), '--pkg=libpulse-operation', '--pkg=speaker-equalizer-profile'],
     install: false
 )
-xvfb = find_program('xvfb-run')
-test('D-Bus registration without sysupdate', xvfb,
-    args: ['-a', registration_test, 'non-sysupdate'], env: test_environment)
-test('D-Bus registration with sysupdate', xvfb,
-    args: ['-a', registration_test, 'sysupdate'], env: test_environment)
+test('D-Bus registration without sysupdate', registration_test,
+    args: ['non-sysupdate'], env: test_environment)
+test('D-Bus registration with sysupdate', registration_test,
+    args: ['sysupdate'], env: test_environment)

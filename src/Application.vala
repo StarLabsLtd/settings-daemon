@@ -82,7 +82,10 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
 
     protected override bool dbus_register (DBusConnection connection, string object_path) throws Error {
         base.dbus_register (connection, object_path);
+        return register_backends (connection, object_path);
+    }
 
+    internal bool register_backends (DBusConnection connection, string object_path) throws Error {
         audio = new Backends.Audio ();
         connection.register_object (object_path, audio);
         connection.register_object (object_path, new Backends.SystemUpdate ());
