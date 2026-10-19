@@ -18,11 +18,23 @@ public int main (string[] args) {
         var connection = Bus.get_sync (BusType.SESSION);
         var object_path = "/io/elementary/settings_daemon/Test";
         assert (application.register_backends (connection, object_path));
-        var reply = connection.call_sync (
+        Variant? reply = null;
+        Error? call_error = null;
+        var loop = new MainLoop ();
+        connection.call.begin (
             connection.get_unique_name (), object_path,
             "org.freedesktop.DBus.Introspectable", "Introspect", null,
-            new VariantType ("(s)"), DBusCallFlags.NONE, -1
+            new VariantType ("(s)"), DBusCallFlags.NONE, -1, null, (obj, result) => {
+                try {
+                    reply = connection.call.end (result);
+                } catch (Error e) {
+                    call_error = e;
+                }
+                loop.quit ();
+            }
         );
+        loop.run ();
+        if (call_error != null) throw call_error;
         string xml;
         reply.get ("(s)", out xml);
         assert ("io.elementary.settings_daemon.Audio" in xml);
@@ -32,6 +44,11 @@ public int main (string[] args) {
         assert (update.provider_name == (sysupdate ? "systemd-sysupdate" : "packagekit"));
     } catch (Error e) {
         critical (e.message);
+        assert_not_reached ();
+    }
+    try {
+        Bus.get_sync (BusType.SESSION).close_sync ();
+    } catch (Error e) {
         assert_not_reached ();
     }
     bus.down ();
