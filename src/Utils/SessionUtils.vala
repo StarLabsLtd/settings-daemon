@@ -4,10 +4,16 @@
  */
 
 namespace SettingsDaemon.Utils {
-    internal static string proc_cmdline_path = "/proc/cmdline";
+    private static string proc_cmdline_path () {
+#if REGISTRATION_TEST
+        return Environment.get_variable ("SETTINGS_DAEMON_TEST_CMDLINE");
+#else
+        return "/proc/cmdline";
+#endif
+    }
 
     public static bool is_running_in_demo_mode () {
-        var proc_cmdline = File.new_for_path (proc_cmdline_path);
+        var proc_cmdline = File.new_for_path (proc_cmdline_path ());
         try {
             var @is = proc_cmdline.read ();
             var dis = new DataInputStream (@is);
@@ -24,7 +30,7 @@ namespace SettingsDaemon.Utils {
     }
 
     public static bool is_sysupdate () {
-        var proc_cmdline = File.new_for_path (proc_cmdline_path);
+        var proc_cmdline = File.new_for_path (proc_cmdline_path ());
         try {
             var @is = proc_cmdline.read ();
             var dis = new DataInputStream (@is);

@@ -9,7 +9,7 @@ public int main (string[] args) {
     } catch (FileError e) {
         assert_not_reached ();
     }
-    SettingsDaemon.Utils.proc_cmdline_path = command_line;
+    Environment.set_variable ("SETTINGS_DAEMON_TEST_CMDLINE", command_line, true);
 
     var bus = new TestDBus (TestDBusFlags.NONE);
     bus.up ();
