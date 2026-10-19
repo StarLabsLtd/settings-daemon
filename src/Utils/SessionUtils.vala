@@ -4,8 +4,10 @@
  */
 
 namespace SettingsDaemon.Utils {
+    internal static string proc_cmdline_path = "/proc/cmdline";
+
     public static bool is_running_in_demo_mode () {
-        var proc_cmdline = File.new_for_path ("/proc/cmdline");
+        var proc_cmdline = File.new_for_path (proc_cmdline_path);
         try {
             var @is = proc_cmdline.read ();
             var dis = new DataInputStream (@is);
@@ -22,7 +24,7 @@ namespace SettingsDaemon.Utils {
     }
 
     public static bool is_sysupdate () {
-        var proc_cmdline = File.new_for_path ("/proc/cmdline");
+        var proc_cmdline = File.new_for_path (proc_cmdline_path);
         try {
             var @is = proc_cmdline.read ();
             var dis = new DataInputStream (@is);

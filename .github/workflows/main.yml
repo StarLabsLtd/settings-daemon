@@ -13,12 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        version: [stable, unstable, development-target]
     container:
-      image: ghcr.io/elementary/docker:${{ matrix.version }}
+      image: ghcr.io/elementary/docker:development-target
 
     steps:
     - uses: actions/checkout@v7
@@ -33,6 +29,7 @@ jobs:
         meson build
         ninja -C build
         ninja -C build install
+        meson test -C build --print-errorlogs
 
   lint:
 

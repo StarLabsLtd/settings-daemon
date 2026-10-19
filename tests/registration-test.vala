@@ -1,0 +1,40 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+public int main (string[] args) {
+    assert (args.length == 2);
+    var sysupdate = args[1] == "sysupdate";
+    var command_line = Path.build_filename (Environment.get_tmp_dir (), "settings-daemon-cmdline-%u".printf (Random.next_int ()));
+    try {
+        FileUtils.set_contents (command_line, sysupdate ? "mount.usr=dissect" : "quiet splash");
+    } catch (FileError e) {
+        assert_not_reached ();
+    }
+    SettingsDaemon.Utils.proc_cmdline_path = command_line;
+
+    var bus = new TestDBus (TestDBusFlags.NONE);
+    bus.up ();
+    var application = new SettingsDaemon.Application ();
+    try {
+        assert (application.register (null));
+        var connection = application.get_dbus_connection ();
+        var reply = connection.call_sync (
+            connection.get_unique_name (), application.get_dbus_object_path (),
+            "org.freedesktop.DBus.Introspectable", "Introspect", null,
+            new VariantType ("(s)"), DBusCallFlags.NONE, -1
+        );
+        string xml;
+        reply.get ("(s)", out xml);
+        assert ("io.elementary.settings_daemon.Audio" in xml);
+        assert ("io.elementary.settings_daemon.SystemUpdate" in xml);
+
+        var update = new SettingsDaemon.Backends.SystemUpdate ();
+        assert (update.provider_name == (sysupdate ? "systemd-sysupdate" : "packagekit"));
+    } catch (Error e) {
+        critical (e.message);
+        assert_not_reached ();
+    }
+    application.quit ();
+    bus.down ();
+    FileUtils.remove (command_line);
+    return 0;
+}

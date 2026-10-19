@@ -475,6 +475,24 @@ internal class SettingsDaemon.Backends.EchoProcessor : Object {
         }
     }
 
+#if ECHO_TEST
+    internal void remember_stream_for_test (bool input, uint32 index, string target) {
+        remember_stream (input, index, target);
+    }
+
+    internal int remembered_count_for_test (bool input) {
+        return input ? restored_recordings.length : restored_playbacks.length;
+    }
+
+    internal string remembered_target_for_test (bool input, uint32 index) {
+        var streams = input ? restored_recordings : restored_playbacks;
+        foreach (var stream in streams) {
+            if (stream.index == index) return stream.target;
+        }
+        return "";
+    }
+#endif
+
     private async bool reattach_streams (bool input) {
         if (!(yield owns_endpoints ())) {
             return false;

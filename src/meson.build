@@ -35,6 +35,23 @@ sources = files(
     'Utils/SysupdateTarget.vala',
 )
 
+backend_dependencies = [
+    config_dep,
+    wireplumber_dep,
+    wireplumber_vapi,
+    pulse_dep,
+    pulse_loop_dep,
+    fwupd_dep,
+    gio_dep,
+    glib_dep,
+    granite_dep,
+    gdk_pixbuf_dep,
+    gexiv2_dep,
+    libgeoclue_dep,
+    m_dep,
+    pk_dep
+]
+
 args = []
 
 if get_option('ubuntu_drivers')
@@ -46,22 +63,7 @@ executable(
     meson.project_name(),
     sources,
     link_with: equalizer_library,
-    dependencies: [
-        config_dep,
-        wireplumber_dep,
-        wireplumber_vapi,
-        pulse_dep,
-        pulse_loop_dep,
-        fwupd_dep,
-        gio_dep,
-        glib_dep,
-        granite_dep,
-        gdk_pixbuf_dep,
-        gexiv2_dep,
-        libgeoclue_dep,
-        m_dep,
-        pk_dep
-    ],
+    dependencies: backend_dependencies,
     vala_args: args + ['--vapidir=' + meson.project_source_root() / 'vapi',
         '--vapidir=' + meson.project_build_root(), '--pkg=libpulse-operation', '--pkg=speaker-equalizer-profile'],
     install: true,
