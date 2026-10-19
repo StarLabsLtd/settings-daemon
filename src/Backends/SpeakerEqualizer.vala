@@ -497,17 +497,9 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
     }
 
     private int control_slot (string name, ref uint64 mask) throws Error {
-        if (!name.has_prefix ("eos_eq_")) {
+        int slot = EqualizerControl.slot (name);
+        if (slot == -1) {
             return -1;
-        }
-        string[] ports = { "Freq", "Q", "Gain", "b0", "b1", "b2", "a0", "a1", "a2" };
-        int slot = name == "eos_eq_h:Mult" ? 45 : name == "eos_eq_h:Add" ? 46 : name == "eos_eq_h:Control" ? 47 : -1;
-        for (int band = 0; band < 5; band++) {
-            for (int port = 0; port < ports.length; port++) {
-                if (name == "eos_eq_%d:%s".printf (band + 1, ports[port])) {
-                    slot = band * 9 + port;
-                }
-            }
         }
         if (slot < 0 || (mask & (1UL << slot)) != 0) {
             throw new IOError.INVALID_DATA (_("Equalizer controls are malformed or duplicated."));
