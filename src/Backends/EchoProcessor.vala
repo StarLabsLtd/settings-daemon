@@ -452,11 +452,19 @@ internal class SettingsDaemon.Backends.EchoProcessor : Object {
     }
 
     private void remember_stream (bool input, uint32 index, string target) {
-        RestoredStream[] streams = input ? restored_recordings : restored_playbacks;
-        for (int i = 0; i < streams.length; i++) {
-            if (streams[i].index == index) {
-                streams[i].target = target;
-                return;
+        if (input) {
+            for (int i = 0; i < restored_recordings.length; i++) {
+                if (restored_recordings[i].index == index) {
+                    restored_recordings[i].target = target;
+                    return;
+                }
+            }
+        } else {
+            for (int i = 0; i < restored_playbacks.length; i++) {
+                if (restored_playbacks[i].index == index) {
+                    restored_playbacks[i].target = target;
+                    return;
+                }
             }
         }
         RestoredStream stream = { index, target };

@@ -85,9 +85,9 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
 
         audio = new Backends.Audio ();
         connection.register_object (object_path, audio);
+        connection.register_object (object_path, new Backends.SystemUpdate ());
 
         if (!SettingsDaemon.Utils.is_sysupdate ()) {
-            connection.register_object (object_path, new Backends.SystemUpdate ());
 #if UBUNTU_DRIVERS
             connection.register_object (object_path, new Backends.UbuntuDrivers ());
 #endif
