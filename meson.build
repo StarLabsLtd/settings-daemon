@@ -69,6 +69,7 @@ symlink = meson.current_source_dir () / 'meson' / 'create-symlink.sh'
 subdir('data')
 subdir('po')
 subdir('src')
+subdir('tests')
 subdir('settings-portal')
 
 gnome.post_install(

@@ -7,6 +7,7 @@ equalizer_library = static_library(
 sources = files(
     'AccountsService.vala',
     'Backends/Audio.vala',
+    'Backends/EqualizerControl.vala',
     'Backends/SpeakerEqualizer.vala',
     'Backends/EchoProcessor.vala',
     'Application.vala',
