@@ -13,7 +13,7 @@ public class SettingsDaemon.Backends.SystemUpdate : Object {
 
     [DBus (visible = false)]
     internal string provider_name {
-        get { return provider is SystemDSystemUpdate ? "systemd-sysupdate" : "packagekit"; }
+        get { return (provider is SystemDSystemUpdate) ? "systemd-sysupdate" : "packagekit"; }
     }
 
     construct {
