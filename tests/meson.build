@@ -43,5 +43,8 @@ registration_test = executable(
         '--vapidir=' + meson.project_build_root(), '--pkg=libpulse-operation', '--pkg=speaker-equalizer-profile'],
     install: false
 )
-test('D-Bus registration without sysupdate', registration_test, args: ['non-sysupdate'], env: test_environment)
-test('D-Bus registration with sysupdate', registration_test, args: ['sysupdate'], env: test_environment)
+xvfb = find_program('xvfb-run')
+test('D-Bus registration without sysupdate', xvfb,
+    args: ['-a', registration_test, 'non-sysupdate'], env: test_environment)
+test('D-Bus registration with sysupdate', xvfb,
+    args: ['-a', registration_test, 'sysupdate'], env: test_environment)
