@@ -15,18 +15,21 @@ public int main (string[] args) {
     bus.up ();
     var application = new SettingsDaemon.Application ();
     try {
-        var connection = Bus.get_sync (BusType.SESSION);
+        var flags = DBusConnectionFlags.AUTHENTICATION_CLIENT |
+            DBusConnectionFlags.MESSAGE_BUS_CONNECTION;
+        var service = new DBusConnection.for_address_sync (bus.get_bus_address (), flags);
+        var client = new DBusConnection.for_address_sync (bus.get_bus_address (), flags);
         var object_path = "/io/elementary/settings_daemon/Test";
-        assert (application.register_backends (connection, object_path));
+        assert (application.register_backends (service, object_path));
         Variant? reply = null;
         Error? call_error = null;
         var loop = new MainLoop ();
-        connection.call.begin (
-            connection.get_unique_name (), object_path,
+        client.call.begin (
+            service.get_unique_name (), object_path,
             "org.freedesktop.DBus.Introspectable", "Introspect", null,
             new VariantType ("(s)"), DBusCallFlags.NONE, -1, null, (obj, result) => {
                 try {
-                    reply = connection.call.end (result);
+                    reply = client.call.end (result);
                 } catch (Error e) {
                     call_error = e;
                 }
@@ -42,6 +45,8 @@ public int main (string[] args) {
 
         var update = new SettingsDaemon.Backends.SystemUpdate ();
         assert (update.provider_name == (sysupdate ? "systemd-sysupdate" : "packagekit"));
+        client.close_sync ();
+        service.close_sync ();
     } catch (Error e) {
         critical (e.message);
         assert_not_reached ();
