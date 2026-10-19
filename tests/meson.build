@@ -37,6 +37,7 @@ registration_test = executable(
     'registration-test.vala',
     sources,
     link_with: equalizer_library,
+    include_directories: include_directories('../src'),
     dependencies: backend_dependencies,
     vala_args: args + ['--define=REGISTRATION_TEST', '--vapidir=' + meson.project_source_root() / 'vapi',
         '--vapidir=' + meson.project_build_root(), '--pkg=libpulse-operation', '--pkg=speaker-equalizer-profile'],
