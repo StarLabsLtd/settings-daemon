@@ -205,7 +205,9 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
         });
     }
 
+#if !REGISTRATION_TEST
     public static int main (string[] args) {
         return new SettingsDaemon.Application ().run (args);
     }
+#endif
 }

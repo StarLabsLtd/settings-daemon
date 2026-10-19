@@ -11,6 +11,11 @@ public class SettingsDaemon.Backends.SystemUpdate : Object {
 
     private SystemUpdateProvider? provider;
 
+    [DBus (visible = false)]
+    internal string provider_name {
+        get { return provider is SystemDSystemUpdate ? "systemd-sysupdate" : "packagekit"; }
+    }
+
     construct {
         if (SettingsDaemon.Utils.is_sysupdate ()) {
             provider = new SystemDSystemUpdate ();
