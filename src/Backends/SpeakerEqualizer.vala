@@ -646,6 +646,11 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
                 return;
             }
             var values = controls (parameters, false);
+            if (!retiring && shape != null && values == null &&
+                selected.state != Wp.NodeState.RUNNING) {
+                state = NativeState.WAITING_FOR_AUDIO;
+                return;
+            }
             bool attached = shape != null || values != null;
             if (attached) {
                 if (shape == null || values == null) {
