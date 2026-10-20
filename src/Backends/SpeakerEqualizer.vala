@@ -459,11 +459,9 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
             queue_native ();
         });
         native_nodes.object_removed.connect ((obj) => {
+            // Proxy teardown is not proof that the physical output disappeared.
             if (obj == native_node) {
                 unbind ();
-                node = "";
-                invalidate ();
-                refresh (echo_master);
             }
         });
         native_nodes.installed.connect (() => {
