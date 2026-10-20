@@ -113,9 +113,6 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         state = NativeState.FAILED;
         native_error = message;
         changed ();
-        if (retiring) {
-            refresh (echo_master);
-        }
     }
 
     private void unbind () {
@@ -478,7 +475,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
     }
 
     private void queue_native () {
-        if (stopped || last_request == null || state == NativeState.FAILED) {
+        if (stopped || last_request == null || (state == NativeState.FAILED && !retiring)) {
             return;
         }
         native_pending = true;
@@ -579,7 +576,8 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
 
     private async void audit_native () {
         native_pending = false;
-        if (core == null || native_nodes == null || last_request == null || state == NativeState.FAILED) {
+        if (core == null || native_nodes == null || last_request == null ||
+            (state == NativeState.FAILED && !retiring)) {
             return;
         }
         native_busy = true;
