@@ -485,7 +485,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
     }
 
     private void queue_native () {
-        if (stopped || last_request == null || (state == NativeState.FAILED && !retiring)) {
+        if (stopped || last_request == null) {
             return;
         }
         native_pending = true;
@@ -586,8 +586,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
 
     private async void audit_native () {
         native_pending = false;
-        if (core == null || native_nodes == null || last_request == null ||
-            (state == NativeState.FAILED && !retiring)) {
+        if (core == null || native_nodes == null || last_request == null) {
             return;
         }
         native_busy = true;
@@ -611,6 +610,10 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
             }
             if (count != 1) {
                 throw new IOError.INVALID_DATA (_("The physical output name is not unique."));
+            }
+            // A failed graph audit must still observe removal from the registry.
+            if (state == NativeState.FAILED && !retiring) {
+                return;
             }
             var objects = native_nodes.new_iterator ();
             Value item;
