@@ -282,7 +282,16 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
             return;
         }
         error = "";
-        if (!complete || !ended || !physical || name == null || serial == null || device == null ||
+        if (!complete || !ended) {
+            // A failed Pulse query does not prove that the native graph is gone.
+            error = _("Could not read the physical output.");
+            if (node != "" && last_request != null) {
+                ensure_native ();
+            }
+            finish ();
+            return;
+        }
+        if (!physical || name == null || serial == null || device == null ||
             profile_id == null || port == null) {
             if (node != "") {
                 node = "";
@@ -444,17 +453,19 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         native_nodes.object_removed.connect ((obj) => {
             if (obj == native_node) {
                 unbind ();
-                state = NativeState.UNBOUND;
+                node = "";
+                invalidate ();
+                refresh (echo_master);
             }
         });
         native_nodes.installed.connect (() => {
             uint32 cookie = core.get_remote_cookie ();
             // Object serials can repeat in a new server; its graphs cannot survive.
             if (server_cookie != null && server_cookie != cookie) {
-                native_revision++;
-                may_write = true;
-                state = NativeState.UNBOUND;
+                node = "";
+                invalidate ();
                 native_error = "";
+                refresh (echo_master);
             }
             server_cookie = cookie;
             if (connect_deadline != 0) {
