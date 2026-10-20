@@ -237,7 +237,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         if (selected == EchoProcessor.SINK_NAME) {
             selected = echo_master;
         }
-        if (retiring && (state == NativeState.CONFIRMED || state == NativeState.FAILED) && !native_busy) {
+        if (retiring && state == NativeState.CONFIRMED && !native_busy) {
             node = "";
             close_native ();
             invalidate ();
@@ -646,7 +646,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
                 return;
             }
             var values = controls (parameters, false);
-            if (!retiring && shape != null && values == null &&
+            if (shape != null && values == null &&
                 selected.state != Wp.NodeState.RUNNING) {
                 state = NativeState.WAITING_FOR_AUDIO;
                 return;
