@@ -444,8 +444,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         interest.add_constraint (Wp.ConstraintType.PW_GLOBAL_PROPERTY, "node.name",
             Wp.ConstraintVerb.EQUALS, new Variant.string (node));
         native_nodes.add_interest_full ((owned) interest);
-        native_nodes.request_object_features (typeof (Wp.Node), (Wp.ObjectFeatures)
-            (Wp.ProxyFeatures.PIPEWIRE_OBJECT_FEATURES_MINIMAL | Wp.ProxyFeatures.PIPEWIRE_OBJECT_FEATURE_PARAM_PROPS));
+        // Keep registry presence separate from activation failures during audit.
         native_nodes.objects_changed.connect (() => {
             native_revision++;
             queue_native ();
@@ -601,6 +600,12 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         try {
             var count = native_nodes.get_n_objects ();
             if (count == 0) {
+                if (native_nodes.is_installed ()) {
+                    node = "";
+                    invalidate ();
+                    refresh (echo_master);
+                    return;
+                }
                 state = NativeState.UNBOUND;
                 return;
             }
@@ -611,6 +616,21 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
             Value item;
             objects.next (out item);
             var selected = (Wp.Node) item.get_object ();
+            state = NativeState.AUDITING;
+            deadline = Timeout.add (2000, () => {
+                deadline = 0;
+                cancel.cancel ();
+                if (core == owner) {
+                    connection_lost ();
+                }
+                return Source.REMOVE;
+            });
+            yield selected.activate ((Wp.ObjectFeatures)
+                (Wp.ProxyFeatures.PIPEWIRE_OBJECT_FEATURES_MINIMAL |
+                 Wp.ProxyFeatures.PIPEWIRE_OBJECT_FEATURE_PARAM_PROPS), cancel);
+            if (!current (revision, owner)) {
+                return;
+            }
             var props = selected.get_properties ();
             if (props.get ("node.name") != desired.node ||
                 props.get ("object.serial") != desired.serial ||
@@ -636,15 +656,6 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
                 state = NativeState.WAITING_FOR_AUDIO;
                 return;
             }
-            state = NativeState.AUDITING;
-            deadline = Timeout.add (2000, () => {
-                deadline = 0;
-                cancel.cancel ();
-                if (core == owner) {
-                    connection_lost ();
-                }
-                return Source.REMOVE;
-            });
             var metadata = yield selected.enum_params ("PropInfo", null, cancel);
             if (!current (revision, owner)) {
                 return;
