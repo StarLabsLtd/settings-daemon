@@ -213,8 +213,10 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         uint request = generation;
         string? selected = null;
         bool pipewire = false;
+        bool received = false;
         var op = context.get_server_info ((c, info) => {
             if (info != null) {
+                received = true;
                 selected = info.default_sink_name;
                 pipewire = info.server_name != null && info.server_name.contains ("PipeWire");
             }
@@ -224,7 +226,13 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
             finish ();
             return;
         }
-        if (!complete || !pipewire || selected == null) {
+        if (!complete || !received) {
+            may_write = false;
+            error = _("Could not read the audio server.");
+            finish ();
+            return;
+        }
+        if (!pipewire || selected == null) {
             invalidate ();
             error = _("Speaker equalization requires PipeWire and a supported physical output.");
             close_native ();
@@ -284,6 +292,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         error = "";
         if (!complete || !ended) {
             // A failed Pulse query does not prove that the native graph is gone.
+            may_write = false;
             error = _("Could not read the physical output.");
             if (node != "" && last_request != null) {
                 ensure_native ();
