@@ -47,3 +47,19 @@ test('D-Bus registration without sysupdate', registration_test,
     args: ['non-sysupdate'], env: test_environment)
 test('D-Bus registration with sysupdate', registration_test,
     args: ['sysupdate'], env: test_environment)
+
+offline_startup_test = executable(
+    'offline-startup-test',
+    'offline-startup-test.vala',
+    'offline-results.c',
+    meson.project_source_root() / 'src/Backends/SystemUpdate/PackageKit.vala',
+    meson.project_source_root() / 'src/Backends/SystemUpdate/SystemUpdateProvider.vala',
+    meson.project_source_root() / 'src/Utils/PkUtils.vala',
+    meson.project_source_root() / 'src/Utils/SessionUtils.vala',
+    dependencies: [pk_dep, gio_dep],
+    install: false
+)
+foreach result : ['success', 'failure']
+    test('offline notification after startup: ' + result, find_program('dbus-run-session'),
+        args: ['--', offline_startup_test, result], env: test_environment)
+endforeach
