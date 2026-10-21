@@ -456,7 +456,14 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         // Keep registry presence separate from activation failures during audit.
         native_nodes.objects_changed.connect (() => {
             native_revision++;
-            queue_native ();
+            // Rediscover on registry changes, not on every empty audit.
+            if (native_nodes.is_installed () && native_nodes.get_n_objects () == 0) {
+                node = "";
+                invalidate ();
+                refresh (echo_master);
+            } else {
+                queue_native ();
+            }
         });
         native_nodes.object_removed.connect ((obj) => {
             // Proxy teardown is not proof that the physical output disappeared.
@@ -606,12 +613,6 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
         try {
             var count = native_nodes.get_n_objects ();
             if (count == 0) {
-                if (native_nodes.is_installed ()) {
-                    node = "";
-                    invalidate ();
-                    refresh (echo_master);
-                    return;
-                }
                 state = NativeState.UNBOUND;
                 return;
             }
