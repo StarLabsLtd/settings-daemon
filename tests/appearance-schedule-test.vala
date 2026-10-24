@@ -93,15 +93,20 @@ private void run_case (string mode) throws Error {
     bus.stop ();
 }
 
+private string selected_mode;
+
+private void run_selected_case () {
+    try {
+        run_case (selected_mode);
+    } catch (Error e) {
+        error ("%s", e.message);
+    }
+}
+
 public int main (string[] args) {
     Test.init (ref args);
     assert (args.length == 2);
-    Test.add_data_func_full ("/appearance/" + args[1], () => {
-        try {
-            run_case (args[1]);
-        } catch (Error e) {
-            error ("%s", e.message);
-        }
-    });
+    selected_mode = args[1];
+    Test.add_func ("/appearance/" + selected_mode, run_selected_case);
     return Test.run ();
 }
