@@ -627,6 +627,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
             Value item;
             objects.next (out item);
             var selected = (Wp.Node) item.get_object ();
+            bool confirmed = state == NativeState.CONFIRMED;
             state = NativeState.AUDITING;
             deadline = Timeout.add (2000, () => {
                 deadline = 0;
@@ -664,7 +665,7 @@ internal class SettingsDaemon.Backends.SpeakerEqualizer : Object {
                 });
             }
             if (selected.state != Wp.NodeState.RUNNING && target_enabled) {
-                state = NativeState.WAITING_FOR_AUDIO;
+                state = confirmed ? NativeState.CONFIRMED : NativeState.WAITING_FOR_AUDIO;
                 return;
             }
             var metadata = yield selected.enum_params ("PropInfo", null, cancel);
