@@ -63,3 +63,18 @@ foreach result : ['success', 'failure']
     test('offline notification after startup: ' + result, find_program('dbus-run-session'),
         args: ['--', offline_startup_test, result], env: test_environment)
 endforeach
+
+appearance_schedule_test = executable(
+    'appearance-schedule-test',
+    'appearance-schedule-test.vala',
+    'appearance-clock.c',
+    meson.project_source_root() / 'src/Backends/PrefersColorSchemeSettings.vala',
+    meson.project_source_root() / 'src/Utils/SunriseSunsetCalculator.vala',
+    dependencies: [config_dep, gio_dep, granite_dep, libgeoclue_dep, m_dep],
+    link_args: ['-Wl,--wrap=g_date_time_new_now_local'],
+    install: false
+)
+foreach mode : ['timezone', 'date', 'fallback', 'denied', 'opt-out', 'manual']
+    test('appearance schedule: ' + mode, appearance_schedule_test,
+        args: [mode], env: test_environment)
+endforeach
