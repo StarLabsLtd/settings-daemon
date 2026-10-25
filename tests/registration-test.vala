@@ -12,6 +12,14 @@ public class TestUpdateTarget : Object {
         return available;
     }
 
+    public async void update (string version, uint64 flags, out string used_version,
+                              out uint64 job_id, out ObjectPath job_path) throws DBusError, IOError {
+        used_version = "next";
+        job_id = 1;
+        job_path = (ObjectPath) "/org/freedesktop/sysupdate1/job/1";
+        throw new IOError.CANCELLED ("Operation was cancelled");
+    }
+
     public async string get_version () throws DBusError, IOError {
         if (fail_version) {
             throw new DBusError.FAILED ("Controlled installed-version failure");
@@ -109,6 +117,26 @@ public int main (string[] args) {
             target.fail_check = false;
             target.available = "next";
             check_update (update, AVAILABLE);
+            update.update.begin ((obj, result) => {
+                try {
+                    update.update.end (result);
+                } catch (Error e) {
+                    call_error = e;
+                }
+                loop.quit ();
+            });
+            loop.run ();
+            if (call_error != null) throw call_error;
+            update.get_current_state.begin ((obj, result) => {
+                try {
+                    assert (update.get_current_state.end (result).state == AVAILABLE);
+                } catch (Error e) {
+                    call_error = e;
+                }
+                loop.quit ();
+            });
+            loop.run ();
+            if (call_error != null) throw call_error;
             target.available = "";
             target.fail_version = true;
             check_update (update, ERROR, "Controlled installed-version failure");

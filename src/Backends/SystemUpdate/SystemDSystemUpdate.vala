@@ -89,6 +89,9 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
 
         try {
             yield target.update (NEWEST, current_cancellable, progress_callback);
+        } catch (IOError.CANCELLED e) {
+            update_state (AVAILABLE);
+            return;
         } catch (Error e) {
             critical ("Failed to update: %s", e.message);
             send_error (e.message);
