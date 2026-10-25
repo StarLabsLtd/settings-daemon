@@ -38,7 +38,10 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             return;
         }
 
-        if (current_state.state != UP_TO_DATE && current_state.state != AVAILABLE && !force) {
+        if (!force &&
+            current_state.state != UP_TO_DATE &&
+            current_state.state != AVAILABLE &&
+            current_state.state != ERROR) {
             return;
         }
 

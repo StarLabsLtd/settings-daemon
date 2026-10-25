@@ -33,10 +33,11 @@ public class TestUpdateTarget : Object {
 
 private void check_update (SettingsDaemon.Backends.SystemUpdate update,
                            SettingsDaemon.PkUtils.State expected,
-                           string expected_error = "") throws Error {
+                           string expected_error = "",
+                           bool force = true) throws Error {
     var loop = new MainLoop ();
     Error? failure = null;
-    update.check_for_updates.begin (true, false, (obj, result) => {
+    update.check_for_updates.begin (force, false, (obj, result) => {
         try {
             update.check_for_updates.end (result);
         } catch (Error e) {
@@ -121,6 +122,9 @@ public int main (string[] args) {
             var settings = new GLib.Settings ("io.elementary.settings-daemon.system-update");
             assert (settings.get_int64 ("last-refresh-time") == 0);
             target.available = "next";
+            settings.set_boolean ("automatic-updates", false);
+            check_update (update, AVAILABLE, "", false);
+            settings.set_boolean ("automatic-updates", true);
             check_update (update, AVAILABLE);
             assert (settings.get_int64 ("last-refresh-time") > 0);
             update.get_last_refresh_time.begin ((obj, result) => {
