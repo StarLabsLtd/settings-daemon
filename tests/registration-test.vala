@@ -1,5 +1,7 @@
 [DBus (name = "org.freedesktop.sysupdate1.Target")]
 public class TestUpdateTarget : Object {
+    public uint update_calls;
+
     public bool fail_check;
     public bool fail_version;
     public string available = "";
@@ -14,6 +16,7 @@ public class TestUpdateTarget : Object {
 
     public async void update (string version, uint64 flags, out string used_version,
                               out uint64 job_id, out ObjectPath job_path) throws DBusError, IOError {
+        update_calls++;
         used_version = "next";
         job_id = 1;
         job_path = (ObjectPath) "/org/freedesktop/sysupdate1/job/1";
@@ -115,8 +118,22 @@ public int main (string[] args) {
             target.fail_check = true;
             check_update (update, ERROR, "Controlled update check failure");
             target.fail_check = false;
+            var settings = new GLib.Settings ("io.elementary.settings-daemon.system-update");
+            assert (settings.get_int64 ("last-refresh-time") == 0);
             target.available = "next";
             check_update (update, AVAILABLE);
+            assert (settings.get_int64 ("last-refresh-time") > 0);
+            update.get_last_refresh_time.begin ((obj, result) => {
+                try {
+                    assert (update.get_last_refresh_time.end (result) == settings.get_int64 ("last-refresh-time"));
+                } catch (Error e) {
+                    call_error = e;
+                }
+                loop.quit ();
+            });
+            loop.run ();
+            if (call_error != null) throw call_error;
+            assert (target.update_calls == 0);
             update.update.begin ((obj, result) => {
                 try {
                     update.update.end (result);
@@ -137,6 +154,43 @@ public int main (string[] args) {
             });
             loop.run ();
             if (call_error != null) throw call_error;
+            assert (target.update_calls == 1);
+            settings.set_boolean ("automatic-updates", false);
+            update.check_for_updates.begin (false, false, (obj, result) => {
+                try {
+                    update.check_for_updates.end (result);
+                } catch (Error e) {
+                    call_error = e;
+                }
+                loop.quit ();
+            });
+            loop.run ();
+            if (call_error != null) throw call_error;
+            assert (target.update_calls == 1);
+            settings.set_boolean ("automatic-updates", true);
+            if (!NetworkMonitor.get_default ().network_metered) {
+                var completed_handler = update.state_changed.connect (() => {
+                    if (target.update_calls == 2) {
+                        loop.quit ();
+                    }
+                });
+                var deadline = Timeout.add_seconds (5, () => {
+                    assert_not_reached ();
+                });
+                update.check_for_updates.begin (false, false, (obj, result) => {
+                    try {
+                        update.check_for_updates.end (result);
+                    } catch (Error e) {
+                        call_error = e;
+                        loop.quit ();
+                    }
+                });
+                loop.run ();
+                Source.remove (deadline);
+                update.disconnect (completed_handler);
+                if (call_error != null) throw call_error;
+                assert (target.update_calls == 2);
+            }
             target.available = "";
             target.fail_version = true;
             check_update (update, ERROR, "Controlled installed-version failure");

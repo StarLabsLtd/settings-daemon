@@ -8,6 +8,8 @@
 public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateProvider {
     private const string NOTIFICATION_ID = "system-update";
 
+    private static Settings settings = new GLib.Settings ("io.elementary.settings-daemon.system-update");
+
     private PkUtils.CurrentState current_state;
     private UpdateDetails update_details;
 
@@ -52,6 +54,8 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             return;
         }
 
+        settings.set_int64 ("last-refresh-time", new DateTime.now_utc ().to_unix ());
+
         if (new_version != null) {
             update_details = {
                 { new_version },
@@ -60,6 +64,9 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             };
 
             update_state (AVAILABLE);
+            if (!force && !NetworkMonitor.get_default ().network_metered && settings.get_boolean ("automatic-updates")) {
+                update.begin ();
+            }
             return;
         }
 
@@ -154,6 +161,6 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
     }
 
     public async int64 get_last_refresh_time () throws DBusError, IOError {
-        return 0;
+        return settings.get_int64 ("last-refresh-time");
     }
 }
