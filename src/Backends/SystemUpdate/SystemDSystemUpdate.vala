@@ -48,7 +48,7 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             new_version = yield target.check_new ();
         } catch (Error e) {
             critical ("Failed to check for updates: %s", e.message);
-            update_state (UP_TO_DATE);
+            update_state (ERROR, e.message);
             return;
         }
 
@@ -71,6 +71,8 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             }
         } catch (Error e) {
             critical ("Failed to check for newer unapplied version: %s", e.message);
+            update_state (ERROR, e.message);
+            return;
         }
 
         update_state (UP_TO_DATE);
