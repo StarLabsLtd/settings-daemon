@@ -67,8 +67,19 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             };
 
             update_state (AVAILABLE);
-            if (!force && !NetworkMonitor.get_default ().network_metered && settings.get_boolean ("automatic-updates")) {
+            var metered_network = NetworkMonitor.get_default ().network_metered;
+            var auto_updates = settings.get_boolean ("automatic-updates");
+            if (!force && !metered_network && auto_updates) {
                 update.begin ();
+                return;
+            }
+
+            if (notify || (metered_network && auto_updates)) {
+                var notification = new Notification (_("Update available"));
+                notification.set_body (_("A system update is available"));
+                notification.set_icon (new ThemedIcon ("software-update-available"));
+                notification.set_default_action (Application.ACTION_PREFIX + Application.SHOW_UPDATES_ACTION);
+                GLib.Application.get_default ().send_notification (NOTIFICATION_ID, notification);
             }
             return;
         }
@@ -77,6 +88,9 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
         try {
             if (yield target.has_newer_unapplied_version ()) {
                 update_state (RESTART_REQUIRED);
+                if (notify) {
+                    notify_restart_required ();
+                }
                 return;
             }
         } catch (Error e) {
@@ -109,6 +123,15 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
         }
 
         update_state (RESTART_REQUIRED);
+        notify_restart_required ();
+    }
+
+    private void notify_restart_required () {
+        var notification = new Notification (_("Restart required"));
+        notification.set_body (_("Please restart your system to finalize updates"));
+        notification.set_icon (new ThemedIcon ("system-reboot"));
+        notification.set_default_action (Application.ACTION_PREFIX + Application.SHOW_UPDATES_ACTION);
+        GLib.Application.get_default ().send_notification (NOTIFICATION_ID, notification);
     }
 
     public void cancel () throws DBusError, IOError {
