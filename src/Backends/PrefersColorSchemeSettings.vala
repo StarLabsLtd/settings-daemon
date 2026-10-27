@@ -29,6 +29,7 @@ public class SettingsDaemon.Backends.PrefersColorSchemeSettings : Object {
     private Settings color_settings;
     private double sunrise = -1.0;
     private double sunset = -1.0;
+    private string solar_date = "";
 
     private uint time_id = 0;
 
@@ -97,6 +98,13 @@ public class SettingsDaemon.Backends.PrefersColorSchemeSettings : Object {
     }
 
     private bool time_callback () {
+        var now = new DateTime.now_local ();
+        if (color_settings.get_string (DARK_SCHEDULE) == "sunset-to-sunrise" &&
+            solar_date != now.format ("%F%z")) {
+            var coordinates = color_settings.get_value ("last-coordinates");
+            on_location_updated (coordinates.get_child_value (0).get_double (), coordinates.get_child_value (1).get_double ());
+        }
+
         var new_color_scheme = Granite.Settings.ColorScheme.NO_PREFERENCE;
         if (is_in_schedule ()) {
             new_color_scheme = Granite.Settings.ColorScheme.DARK;
@@ -119,11 +127,8 @@ public class SettingsDaemon.Backends.PrefersColorSchemeSettings : Object {
         color_settings.set_value ("last-coordinates", new Variant.tuple ({latitude, longitude}));
 
         var now = new DateTime.now_local ();
-        double _sunrise, _sunset;
-        if (SettingsDaemon.Utils.SunriseSunsetCalculator.get_sunrise_and_sunset (now, latitude, longitude, out _sunrise, out _sunset)) {
-            sunrise = _sunrise;
-            sunset = _sunset;
-        }
+        solar_date = now.format ("%F%z");
+        SettingsDaemon.Utils.SunriseSunsetCalculator.get_sunrise_and_sunset (now, latitude, longitude, out sunrise, out sunset);
     }
 
     private void update_color_scheme () {

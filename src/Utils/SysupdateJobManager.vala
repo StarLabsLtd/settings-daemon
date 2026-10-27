@@ -7,11 +7,13 @@
 
 public class SettingsDaemon.Utils.SysupdateJobManager : Object {
     private Sysupdate.Manager manager;
+    private string? owner;
 
     private HashTable<string, int> received_object_paths;
 
     public async SysupdateJobManager (Cancellable cancellable) throws Error {
         manager = yield Bus.get_proxy (SYSTEM, Sysupdate.BUS_NAME, Sysupdate.Manager.PATH, NONE, cancellable);
+        owner = manager.g_name_owner;
         manager.job_removed.connect (on_job_removed);
     }
 
@@ -20,7 +22,9 @@ public class SettingsDaemon.Utils.SysupdateJobManager : Object {
     }
 
     private void on_job_removed (uint64 finished_job_id, string finished_object_path, int status) {
-        received_object_paths[finished_object_path] = status;
+        if (manager.g_name_owner == owner) {
+            received_object_paths[finished_object_path] = status;
+        }
     }
 
     /**
@@ -35,8 +39,19 @@ public class SettingsDaemon.Utils.SysupdateJobManager : Object {
             return;
         }
 
+        if (owner == null || manager.g_name_owner != owner) {
+            job.notify_completed ();
+            throw new IOError.CLOSED ("Update service disappeared");
+        }
+
         var signal_id = manager.job_removed.connect ((job_id, job_path) => {
             if (job_path == job.path) {
+                wait_for_job.callback ();
+            }
+        });
+
+        var owner_id = manager.notify["g-name-owner"].connect (() => {
+            if (manager.g_name_owner != owner) {
                 wait_for_job.callback ();
             }
         });
@@ -44,6 +59,12 @@ public class SettingsDaemon.Utils.SysupdateJobManager : Object {
         yield;
 
         manager.disconnect (signal_id);
+        manager.disconnect (owner_id);
+
+        if (!(job.path in received_object_paths)) {
+            job.notify_completed ();
+            throw new IOError.CLOSED ("Update service disappeared");
+        }
 
         check_status (job);
     }
