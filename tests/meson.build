@@ -95,3 +95,20 @@ foreach mode : ['success', 'failure', 'owner-loss', 'owner-loss-before-wait', 'c
             'DBUS_SYSTEM_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" exec "$1" "$2"',
             'sh', sysupdate_job_test, mode])
 endforeach
+
+sysupdate_notifications_test = executable(
+    'sysupdate-notifications-test',
+    'sysupdate-notifications.vala',
+    'sysupdate-network.c',
+    meson.project_source_root() / 'src/Backends/SystemUpdate/SystemDSystemUpdate.vala',
+    meson.project_source_root() / 'src/Backends/SystemUpdate/SystemUpdateProvider.vala',
+    meson.project_source_root() / 'src/Utils/PkUtils.vala',
+    meson.project_source_root() / 'src/DBus/Sysupdate.vala',
+    dependencies: [pk_dep, gio_dep],
+    link_args: ['-Wl,--wrap=g_network_monitor_get_network_metered'],
+    install: false
+)
+foreach mode : ['available', 'metered', 'automatic', 'quiet', 'staged', 'staged-quiet', 'failure', 'cancel']
+    test('sysupdate notifications: ' + mode, find_program('dbus-run-session'),
+        args: ['--', sysupdate_notifications_test, mode], env: test_environment)
+endforeach
