@@ -78,3 +78,20 @@ foreach mode : ['timezone', 'date', 'fallback', 'denied', 'opt-out', 'manual']
     test('appearance schedule: ' + mode, appearance_schedule_test,
         args: [mode], env: test_environment)
 endforeach
+
+sysupdate_job_test = executable(
+    'sysupdate-job-test',
+    'sysupdate-job-test.vala',
+    'sysupdate-target-stub.vala',
+    meson.project_source_root() / 'src/DBus/Sysupdate.vala',
+    meson.project_source_root() / 'src/Utils/SysupdateJob.vala',
+    meson.project_source_root() / 'src/Utils/SysupdateJobManager.vala',
+    dependencies: gio_dep,
+    install: false
+)
+foreach mode : ['success', 'failure', 'owner-loss', 'owner-loss-before-wait', 'completed-before-wait']
+    test('sysupdate job: ' + mode, find_program('dbus-run-session'),
+        args: ['--', find_program('sh'), '-c',
+            'DBUS_SYSTEM_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" exec "$1" "$2"',
+            'sh', sysupdate_job_test, mode])
+endforeach

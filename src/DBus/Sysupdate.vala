@@ -18,7 +18,7 @@ namespace Sysupdate {
 }
 
 [DBus (name = "org.freedesktop.sysupdate1.Manager")]
-private interface Sysupdate.Manager : Object {
+private interface Sysupdate.Manager : DBusProxy {
     public const string PATH = "/org/freedesktop/sysupdate1";
 
     public signal void job_removed (uint64 job_id, ObjectPath object_path, int status);
