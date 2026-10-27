@@ -89,7 +89,7 @@ sysupdate_job_test = executable(
     dependencies: gio_dep,
     install: false
 )
-foreach mode : ['success', 'failure', 'owner-loss', 'owner-loss-before-wait', 'completed-before-wait']
+foreach mode : ['success', 'failure', 'owner-loss', 'owner-loss-before-wait', 'completed-before-wait', 'replacement-before-wait']
     test('sysupdate job: ' + mode, find_program('dbus-run-session'),
         args: ['--', find_program('sh'), '-c',
             'DBUS_SYSTEM_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" exec "$1" "$2"',

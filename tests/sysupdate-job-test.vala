@@ -24,9 +24,21 @@ private async void run_case (string mode) throws Error {
         null, DBusCallFlags.NONE, -1);
     var observer = yield new SettingsDaemon.Utils.SysupdateJobManager (new Cancellable ());
     var job = yield new SettingsDaemon.Utils.SysupdateJob (path, new Cancellable (), (message, progress) => {});
-    if (mode == "owner-loss-before-wait" || mode == "completed-before-wait") {
+    if (mode == "owner-loss-before-wait" || mode == "completed-before-wait" || mode == "replacement-before-wait") {
         if (mode == "owner-loss-before-wait") {
             yield service.close ();
+        } else if (mode == "replacement-before-wait") {
+            yield service.close ();
+            service = yield new DBusConnection.for_address (
+                Environment.get_variable ("DBUS_SYSTEM_BUS_ADDRESS"),
+                DBusConnectionFlags.AUTHENTICATION_CLIENT | DBusConnectionFlags.MESSAGE_BUS_CONNECTION);
+            mock = new TestJobManager ();
+            service.register_object (Sysupdate.Manager.PATH, mock);
+            service.register_object (path, new TestJob ());
+            yield service.call ("org.freedesktop.DBus", "/org/freedesktop/DBus",
+                "org.freedesktop.DBus", "RequestName", new Variant ("(su)", Sysupdate.BUS_NAME, 0),
+                null, DBusCallFlags.NONE, -1);
+            mock.job_removed (1, path, 0);
         } else {
             mock.job_removed (1, path, 0);
         }
@@ -48,7 +60,7 @@ private async void run_case (string mode) throws Error {
         yield observer.wait_for_job (job);
         assert (mode == "success" || mode == "completed-before-wait");
     } catch (IOError.CLOSED e) {
-        assert (mode == "owner-loss" || mode == "owner-loss-before-wait");
+        assert (mode == "owner-loss" || mode == "owner-loss-before-wait" || mode == "replacement-before-wait");
     } catch (IOError.FAILED e) {
         assert (mode == "failure");
     }

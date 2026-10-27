@@ -22,7 +22,9 @@ public class SettingsDaemon.Utils.SysupdateJobManager : Object {
     }
 
     private void on_job_removed (uint64 finished_job_id, string finished_object_path, int status) {
-        received_object_paths[finished_object_path] = status;
+        if (manager.g_name_owner == owner) {
+            received_object_paths[finished_object_path] = status;
+        }
     }
 
     /**
