@@ -2,7 +2,6 @@
 Requires=io.elementary.settings-daemon.service
 After=io.elementary.settings-daemon.service
 Description=Check for firmware updates daily
-ConditionACPower=true
 After=network.target network-online.target systemd-networkd.service NetworkManager.service connman.service
 
 [Service]
