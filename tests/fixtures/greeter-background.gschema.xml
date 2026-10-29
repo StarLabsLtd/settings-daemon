@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <enum id="org.gnome.desktop.GDesktopColorScheme">
+    <value nick="default" value="0"/>
+    <value nick="prefer-dark" value="1"/>
+    <value nick="prefer-light" value="2"/>
+  </enum>
+  <enum id="org.gnome.desktop.GDesktopBackgroundStyle">
+    <value nick="none" value="0"/>
+    <value nick="wallpaper" value="1"/>
+    <value nick="centered" value="2"/>
+    <value nick="scaled" value="3"/>
+    <value nick="stretched" value="4"/>
+    <value nick="zoom" value="5"/>
+    <value nick="spanned" value="6"/>
+  </enum>
+  <schema id="org.gnome.desktop.background" path="/org/gnome/desktop/background/">
+    <key name="picture-options" enum="org.gnome.desktop.GDesktopBackgroundStyle">
+      <default>'zoom'</default>
+    </key>
+    <key name="picture-uri" type="s">
+      <default>'file:///usr/share/backgrounds/vale/vale-quiet.jpg'</default>
+    </key>
+    <key name="primary-color" type="s">
+      <default>'#023c88'</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.interface" path="/org/gnome/desktop/interface/">
+    <key name="color-scheme" enum="org.gnome.desktop.GDesktopColorScheme">
+      <default>'default'</default>
+    </key>
+    <key name="cursor-blink" type="b"><default>true</default></key>
+    <key name="cursor-blink-time" type="i"><default>1200</default></key>
+    <key name="cursor-blink-timeout" type="i"><default>10</default></key>
+    <key name="cursor-size" type="i"><default>24</default></key>
+    <key name="locate-pointer" type="b"><default>false</default></key>
+    <key name="text-scaling-factor" type="d"><default>1.0</default></key>
+    <key name="document-font-name" type="s"><default>'Sans 10'</default></key>
+    <key name="font-name" type="s"><default>'Sans 10'</default></key>
+    <key name="monospace-font-name" type="s"><default>'Monospace 10'</default></key>
+  </schema>
+  <schema id="org.gnome.settings-daemon.peripherals.touchscreen" path="/org/gnome/settings-daemon/peripherals/touchscreen/">
+    <key name="orientation-lock" type="b"><default>false</default></key>
+  </schema>
+</schemalist>
