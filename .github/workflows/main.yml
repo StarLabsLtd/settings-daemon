@@ -13,19 +13,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        version: [stable, unstable, development-target]
     container:
-      image: ghcr.io/elementary/docker:${{ matrix.version }}
+      image: ghcr.io/elementary/docker:development-target
 
     steps:
     - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         apt update
-        apt install -y libaccountsservice-dev libdbus-1-dev libgranite-7-dev libgeoclue-2-dev libfwupd-dev libpackagekit-glib2-dev libgdk-pixbuf-2.0-dev libgexiv2-dev meson systemd-dev valac
+        apt install -y libaccountsservice-dev libdbus-1-dev libgranite-7-dev libgeoclue-2-dev libfwupd-dev libpackagekit-glib2-dev libgdk-pixbuf-2.0-dev libgexiv2-dev meson systemd-dev valac libpulse-dev libwireplumber-0.5-dev
     - name: Build
       env:
         DESTDIR: out
@@ -33,6 +29,7 @@ jobs:
         meson build
         ninja -C build
         ninja -C build install
+        meson test -C build --print-errorlogs
 
   lint:
 

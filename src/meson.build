@@ -1,5 +1,15 @@
+equalizer_library = static_library(
+    'speaker-equalizer-profile',
+    'Backends/speaker-equalizer-profile.c',
+    dependencies: [gio_dep],
+)
+
 sources = files(
     'AccountsService.vala',
+    'Backends/Audio.vala',
+    'Backends/EqualizerControl.vala',
+    'Backends/SpeakerEqualizer.vala',
+    'Backends/EchoProcessor.vala',
     'Application.vala',
     'Backends/AccentColorManager.vala',
     'Backends/ApplicationShortcuts.vala',
@@ -25,6 +35,23 @@ sources = files(
     'Utils/SysupdateTarget.vala',
 )
 
+backend_dependencies = [
+    config_dep,
+    wireplumber_dep,
+    wireplumber_vapi,
+    pulse_dep,
+    pulse_loop_dep,
+    fwupd_dep,
+    gio_dep,
+    glib_dep,
+    granite_dep,
+    gdk_pixbuf_dep,
+    gexiv2_dep,
+    libgeoclue_dep,
+    m_dep,
+    pk_dep
+]
+
 args = []
 
 if get_option('ubuntu_drivers')
@@ -35,18 +62,9 @@ endif
 executable(
     meson.project_name(),
     sources,
-    dependencies: [
-        config_dep,
-        fwupd_dep,
-        gio_dep,
-        glib_dep,
-        granite_dep,
-        gdk_pixbuf_dep,
-        gexiv2_dep,
-        libgeoclue_dep,
-        m_dep,
-        pk_dep
-    ],
-    vala_args: args,
+    link_with: equalizer_library,
+    dependencies: backend_dependencies,
+    vala_args: args + ['--vapidir=' + meson.project_source_root() / 'vapi',
+        '--vapidir=' + meson.project_build_root(), '--pkg=libpulse-operation', '--pkg=speaker-equalizer-profile'],
     install: true,
 )
