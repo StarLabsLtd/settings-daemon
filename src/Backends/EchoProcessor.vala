@@ -241,7 +241,7 @@ internal class SettingsDaemon.Backends.EchoProcessor : Object {
         public uint32 index;
     }
 
-    private async Endpoint source_info (string? name) {
+    private async Endpoint source_info (string? name, bool echo_reference = false) {
         Endpoint result = { false, false, false, false, PulseAudio.INVALID_INDEX };
         if (name == null) {
             return result;
@@ -260,7 +260,11 @@ internal class SettingsDaemon.Backends.EchoProcessor : Object {
                     info.proplist.gets ("node.virtual") != "true" &&
                     info.proplist.gets ("device.master_device") == null &&
                     (PulseAudio.SourceFlags.HARDWARE in info.flags || info.card != PulseAudio.INVALID_INDEX);
-
+                // The shared HDA source remains usable for external headset capture.
+                if (echo_reference && info.proplist.gets ("device.echo_cancel.policy") == "vale-detached-camera") {
+                    result.physical = result.physical && info.active_port != null &&
+                        info.active_port->name == "analog-input-mic";
+                }
             }
         });
         if (!(yield wait (op)) || !result.complete) {
@@ -660,7 +664,8 @@ internal class SettingsDaemon.Backends.EchoProcessor : Object {
             enabled = module_index != PulseAudio.INVALID_INDEX && source == SOURCE_NAME && sink == SINK_NAME;
             var target_source = source == SOURCE_NAME ? source_master : source;
             var target_sink = sink == SINK_NAME ? sink_master : sink;
-            available = (yield physical_source (target_source)) && (yield physical_sink (target_sink));
+            available = (yield source_info (target_source, true)).physical &&
+                (yield physical_sink (target_sink));
             if (restore_failed) {
                 // Still discover and release a load that completed after timeout.
                 yield release ();
