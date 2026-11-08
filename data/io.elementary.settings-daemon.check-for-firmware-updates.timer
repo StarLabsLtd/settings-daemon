@@ -1,4 +1,5 @@
 [Unit]
+PartOf=graphical-session.target
 Description=Check for firmware updates daily
 
 [Timer]
@@ -6,4 +7,4 @@ OnCalendar=daily
 Persistent=true
 
 [Install]
-WantedBy=timers.target
+WantedBy=graphical-session.target
