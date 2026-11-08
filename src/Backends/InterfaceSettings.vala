@@ -127,6 +127,8 @@ public class SettingsDaemon.Backends.InterfaceSettings : GLib.Object {
         if (wingpanel_power_settings != null) {
             wingpanel_power_settings.changed[SHOW_PERCENTAGE].connect (sync_gsettings_to_accountsservice);
         }
+
+        sync_background_to_greeter ();
     }
 
     private void sync_gsettings_to_accountsservice () {

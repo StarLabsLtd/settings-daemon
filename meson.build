@@ -58,6 +58,7 @@ subdir('data')
 subdir('po')
 subdir('src')
 subdir('settings-portal')
+subdir('tests')
 
 gnome.post_install(
     glib_compile_schemas: true
