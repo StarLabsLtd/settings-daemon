@@ -6,7 +6,8 @@ After=gnome-session-initialized.target
 WantedBy=gnome-session-initialized.target
 
 [Service]
-Type=exec
+Type=dbus
+BusName=io.elementary.settings-daemon
 ExecStart=@bindir@/io.elementary.settings-daemon
 Restart=on-failure
 Slice=session.slice
