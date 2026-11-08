@@ -18,6 +18,7 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
     private Backends.PrefersColorSchemeSettings prefers_color_scheme_settings;
     private Backends.AccentColorManager accent_color_manager;
 
+    private Backends.Audio audio;
     private Backends.Housekeeping housekeeping;
     private Backends.PowerProfilesSync power_profiles_sync;
     private Backends.ApplicationShortcuts application_shortcuts;
@@ -55,6 +56,8 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
         query_end.connect (() => release ());
         base.startup ();
 
+        audio.start ();
+
         housekeeping = new Backends.Housekeeping ();
         power_profiles_sync = new Backends.PowerProfilesSync ();
         application_shortcuts = new Backends.ApplicationShortcuts ();
@@ -79,7 +82,12 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
 
     protected override bool dbus_register (DBusConnection connection, string object_path) throws Error {
         base.dbus_register (connection, object_path);
+        return register_backends (connection, object_path);
+    }
 
+    internal bool register_backends (DBusConnection connection, string object_path) throws Error {
+        audio = new Backends.Audio ();
+        connection.register_object (object_path, audio);
         connection.register_object (object_path, new Backends.SystemUpdate ());
 
         if (!SettingsDaemon.Utils.is_sysupdate ()) {
@@ -200,7 +208,9 @@ public sealed class SettingsDaemon.Application : Gtk.Application {
         });
     }
 
+#if !REGISTRATION_TEST
     public static int main (string[] args) {
         return new SettingsDaemon.Application ().run (args);
     }
+#endif
 }
