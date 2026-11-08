@@ -57,7 +57,7 @@ public class SettingsDaemon.Backends.Audio : Object {
     }
 
     private void connect_audio () {
-        context = new PulseAudio.Context (loop.get_api (), "elementary Settings Daemon");
+        context = new PulseAudio.Context (loop.get_api (), "Vale Settings Daemon");
         context.set_state_callback ((c) => {
             switch (c.get_state ()) {
                 case PulseAudio.Context.State.READY:
