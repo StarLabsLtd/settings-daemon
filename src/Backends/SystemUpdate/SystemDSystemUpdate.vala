@@ -8,6 +8,8 @@
 public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateProvider {
     private const string NOTIFICATION_ID = "system-update";
 
+    private static Settings settings = new GLib.Settings ("io.elementary.settings-daemon.system-update");
+
     private PkUtils.CurrentState current_state;
     private UpdateDetails update_details;
 
@@ -36,7 +38,10 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             return;
         }
 
-        if (current_state.state != UP_TO_DATE && current_state.state != AVAILABLE && !force) {
+        if (!force &&
+            current_state.state != UP_TO_DATE &&
+            current_state.state != AVAILABLE &&
+            current_state.state != ERROR) {
             return;
         }
 
@@ -48,9 +53,11 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             new_version = yield target.check_new ();
         } catch (Error e) {
             critical ("Failed to check for updates: %s", e.message);
-            update_state (UP_TO_DATE);
+            update_state (ERROR, e.message);
             return;
         }
+
+        settings.set_int64 ("last-refresh-time", new DateTime.now_utc ().to_unix ());
 
         if (new_version != null) {
             update_details = {
@@ -60,6 +67,9 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             };
 
             update_state (AVAILABLE);
+            if (!force && !NetworkMonitor.get_default ().network_metered && settings.get_boolean ("automatic-updates")) {
+                update.begin ();
+            }
             return;
         }
 
@@ -71,6 +81,8 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
             }
         } catch (Error e) {
             critical ("Failed to check for newer unapplied version: %s", e.message);
+            update_state (ERROR, e.message);
+            return;
         }
 
         update_state (UP_TO_DATE);
@@ -87,6 +99,9 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
 
         try {
             yield target.update (NEWEST, current_cancellable, progress_callback);
+        } catch (IOError.CANCELLED e) {
+            update_state (AVAILABLE);
+            return;
         } catch (Error e) {
             critical ("Failed to update: %s", e.message);
             send_error (e.message);
@@ -149,6 +164,6 @@ public class SettingsDaemon.Backends.SystemDSystemUpdate : Object, SystemUpdateP
     }
 
     public async int64 get_last_refresh_time () throws DBusError, IOError {
-        return 0;
+        return settings.get_int64 ("last-refresh-time");
     }
 }
