@@ -126,3 +126,16 @@ foreach mode : ['available', 'metered', 'automatic', 'quiet', 'staged', 'staged-
     test('sysupdate notifications: ' + mode, find_program('dbus-run-session'),
         args: ['--', sysupdate_notifications_test, mode], env: test_environment)
 endforeach
+
+application_shortcuts_test = executable(
+    'application-shortcuts-test',
+    'application-shortcuts-test.vala',
+    'application-shortcuts-display.vala',
+    meson.project_source_root() / 'src/Backends/ApplicationShortcuts.vala',
+    meson.project_source_root() / 'src/DBus/ShellKeyGrabber.vala',
+    meson.project_source_root() / 'src/DBus/DesktopIntegration.vala',
+    dependencies: [gio_dep, dependency('gio-unix-2.0')],
+    install: false
+)
+test('application shortcut binding actions', find_program('dbus-run-session'),
+    args: ['--', application_shortcuts_test], env: test_environment, timeout: 15)

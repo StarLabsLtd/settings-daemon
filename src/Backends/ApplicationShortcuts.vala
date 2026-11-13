@@ -37,7 +37,11 @@ public class SettingsDaemon.Backends.ApplicationShortcuts : Object {
         application_settings.changed.connect (() => {
             if (key_grabber != null) {
                 try {
-                    key_grabber.ungrab_accelerators (saved_action_ids.get_keys_as_array ());
+                    uint[] action_ids = {};
+                    foreach (var action_id in saved_action_ids.get_keys ()) {
+                        action_ids += action_id;
+                    }
+                    key_grabber.ungrab_accelerators (action_ids);
                 } catch (Error e) {
                     critical ("Couldn't ungrab accelerators: %s", e.message);
                 }
@@ -106,7 +110,10 @@ public class SettingsDaemon.Backends.ApplicationShortcuts : Object {
     }
 
     private void setup_grabs () requires (key_grabber != null) {
+        saved_action_ids.remove_all ();
+
         Accelerator[] accelerators = {};
+        ActionInfo[] actions = {};
 
         var parsed_value = (Parsed[]) application_settings.get_value ("application-shortcuts");
         for (var i = 0; i < parsed_value.length; i++) {
@@ -116,6 +123,11 @@ public class SettingsDaemon.Backends.ApplicationShortcuts : Object {
                     name = keybindings[j],
                     mode_flags = ActionMode.NONE,
                     grab_flags = Meta.KeyBindingFlags.NONE
+                };
+                actions += ActionInfo () {
+                    type = parsed_value[i].type,
+                    target = parsed_value[i].target,
+                    parameters = parsed_value[i].parameters
                 };
             }
         }
@@ -129,8 +141,9 @@ public class SettingsDaemon.Backends.ApplicationShortcuts : Object {
         }
 
         for (int i = 0; i < action_ids.length; i++) {
-            var parsed_value_i = parsed_value[i];
-            saved_action_ids[action_ids[i]] = { parsed_value_i.type, parsed_value_i.target, parsed_value_i.parameters };
+            if (action_ids[i] != 0) {
+                saved_action_ids[action_ids[i]] = actions[i];
+            }
         }
 
         key_grabber_id = key_grabber.accelerator_activated.connect (on_accelerator_activated);
